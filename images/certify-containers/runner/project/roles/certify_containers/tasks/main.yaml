@@ -1,0 +1,55 @@
+---
+- name: Print preflight version
+  ansible.builtin.command:
+    argv:
+      - "{{ certify_containers_preflight_cmd }}"
+      - "--version"
+  register: vers_cmd
+  changed_when: vers_cmd.rc == 0
+  failed_when: vers_cmd.rc != 0
+
+- name: Populate environment with relevant inputs
+  no_log: "{{ certify_containers_no_log | bool }}"
+  ansible.builtin.set_fact:
+    tooling_env: "{{ tooling_env | default({}) | combine({item.key: item.val}) }}"
+  when: item.val is defined and item.val != ''
+  with_items:
+    - key: 'PFLT_PYXIS_API_TOKEN'
+      val: "{{ certify_containers_pyxis_api_token }}"
+
+- name: Create log directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ [certify_containers_cert_logs_dir, inventory_hostname] | path_join }}\
+          -{{ lookup('community.general.random_string', upper=false, numbers=false, special=false, length=8) }}"
+    mode: "0755"
+  register: run_dir
+
+- name: Run certification tooling
+  ansible.builtin.command:
+    cmd: >
+      {{ certify_containers_preflight_cmd }} check container
+      {%- if certify_containers_preflight_loglevel is defined and certify_containers_preflight_loglevel != '' %}
+      --loglevel {{ certify_containers_preflight_loglevel }}
+      {%- endif %}
+      {%- if certify_containers_submit_results is defined and certify_containers_submit_results %}
+      --submit
+      {%- endif %}
+      {%- if certify_containers_component_id is defined and certify_containers_component_id != '' %}
+      --certification-component-id {{ certify_containers_component_id }}
+      {%- endif %}
+      {%- if certify_containers_image_platform is defined and certify_containers_image_platform != '' %}
+      --platform {{ certify_containers_image_platform }}
+      {%- endif %}
+      {%- if certify_containers_docker_config_filename is defined and certify_containers_docker_config_filename != '' %}
+      --docker-config {{ [certify_containers_userfiles_dir, certify_containers_docker_config_filename] | path_join }}
+      {%- endif %}
+      {%- if certify_containers_pyxis_env is defined  and certify_containers_pyxis_env != '' %}
+      --pyxis-env {{ certify_containers_pyxis_env }}
+      {%- endif %}
+      {{ certify_containers_target_image }}
+    chdir: "{{ run_dir.path }}"
+  environment: "{{ tooling_env | default({}) }}"
+  register: cert_cmd
+  changed_when: cert_cmd.rc == 0
+  failed_when: cert_cmd.rc != 0

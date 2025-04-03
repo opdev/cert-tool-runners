@@ -1,0 +1,7 @@
+---
+certify_containers_working_dir: ''
+certify_containers_userfiles_dir: "{{ [certify_containers_working_dir, 'userfiles'] | path_join }}"
+certify_containers_cert_logs_dir: "{{ [certify_containers_working_dir, 'cert-logs'] | path_join }}"
+certify_containers_preflight_cmd: "preflight" # i.e. the preflight command must be in PATH.
+certify_containers_preflight_loglevel: 'debug'
+certify_containers_no_log: true

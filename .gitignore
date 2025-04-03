@@ -1,0 +1,47 @@
+
+# Space for users to put arbitrary artifacts
+scratch/*
+
+# Where build artifacts might live
+build/
+
+# Workspace Specific
+.vscode
+.ansible/
+.DS_Store
+ansible.cfg
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Envs
+venv.*/
+ve/
+
+# For Pyenv users
+.python-version
