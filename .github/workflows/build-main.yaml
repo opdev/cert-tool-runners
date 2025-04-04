@@ -1,0 +1,80 @@
+name: Build Main
+
+on:
+  push:
+    branches: [ main, ghactions ]
+  
+jobs:
+  build-main-certify-containers:
+    env:
+      IMAGE_NAME: certify-containers
+    name: Build and and push main snapshots for certify-containers
+    strategy: 
+      matrix:
+        architecture:
+        - amd64
+        - arm64
+        # - ppc64le,
+        # - s390x
+        platform: [linux]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    # - name: Fetch latest release version
+    #   uses: reloc8/action-latest-release-version@1.0.0
+    #   id: fetch-latest-release
+    
+    - name: Set Env Tags
+      ## Not using actual release tag for now, as no releases exist.
+      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
+      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
+    
+    - name: set short sha
+      run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+        
+    - name: Build Image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        archs: ${{ matrix.architecture }}
+        context: ./images/certify-containers
+        build-args: |
+          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
+          arch=${{ matrix.architecture }}
+        dockerfiles: |
+          ./images/certify-containers/Containerfile
+
+    - name: Push Image
+      id: push-image
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        registry: ${{ secrets.IMAGE_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_TOKEN }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
+    
+    outputs:
+      imageName: ${{ env.IMAGE_NAME }}
+      imageVersion: ${{ env.SHA_SHORT }}
+
+  build-multiarch-certify-containers:
+    needs: build-main-certify-containers
+    uses: ./.github/workflows/build-multiarch.yml
+    with:
+      name: ${{ needs.build-main-certify-containers.outputs.imageName }}
+      tag: ${{ needs.build-main-certify-containers.outputs.imageVersion }}
+      sign: false # do not sign images built on main
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      user: ${{ secrets.REGISTRY_USER }}
+      password: ${{ secrets.REGISTRY_TOKEN }}
