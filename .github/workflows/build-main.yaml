@@ -47,6 +47,7 @@ jobs:
         build-args: |
           release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
           arch=${{ matrix.architecture }}
+          commit=${{ github.sha }}
         dockerfiles: |
           ./images/certify-containers/Containerfile
 
