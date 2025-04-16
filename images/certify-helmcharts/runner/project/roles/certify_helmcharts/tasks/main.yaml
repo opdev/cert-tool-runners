@@ -1,0 +1,54 @@
+---
+- name: Print chart-verifier version
+  ansible.builtin.command:
+    argv:
+      - "{{ certify_helmcharts_chart_verifier_cmd }}"
+      - "version"
+  register: vers_cmd
+  changed_when: vers_cmd.rc == 0
+  failed_when: vers_cmd.rc != 0
+
+- name: Create log directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ [certify_helmcharts_cert_logs_dir, inventory_hostname] | path_join }}\
+          -{{ lookup('community.general.random_string', upper=false, numbers=false, special=false, length=8) }}"
+    mode: "0755"
+  register: run_dir
+
+- name: Run certification tooling
+  ansible.builtin.command:
+    cmd: >
+      {{ certify_helmcharts_chart_verifier_cmd }} verify --write-to-file
+      {%- if
+            certify_helmcharts_set_items is defined and
+            certify_helmcharts_set_items is iterable and
+            certify_helmcharts_set_items is not mapping and
+            certify_helmcharts_set_items is not string
+      %}
+      {%- for _set_item in certify_helmcharts_set_items %}
+      --set {{ _set_item }}
+      {%- endfor %}
+      {%- endif %}
+
+      {%- if certify_helmcharts_kubeconfig is defined and certify_helmcharts_kubeconfig != '' %}
+      --kubeconfig {{ certify_helmcharts_kubeconfig }}
+      {%- endif %}
+
+      {%- if certify_helmcharts_profile_version is defined and certify_helmcharts_profile_version != '' %}
+      --set profile.version={{ certify_helmcharts_profile_version }}
+      {%- endif %}
+
+      {%- if certify_helmcharts_vendor_type is defined and certify_helmcharts_vendor_type != '' %}
+      --set profile.vendorType={{ certify_helmcharts_vendor_type }}
+      {%- endif %}
+
+      {%- if certify_helmcharts_debug is defined and certify_helmcharts_debug != '' and certify_helmcharts_debug %}
+      --debug
+      {%- endif %}
+      {{ certify_helmcharts_chart_uri }}
+    chdir: "{{ run_dir.path }}"
+  environment: "{{ tooling_env | default({}) }}"
+  register: cert_cmd
+  changed_when: cert_cmd.rc == 0
+  failed_when: cert_cmd.rc != 0

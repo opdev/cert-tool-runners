@@ -1,0 +1,10 @@
+---
+certify_helmcharts_working_dir: ''
+certify_helmcharts_userfiles_dir: "{{ [certify_helmcharts_working_dir, 'userfiles'] | path_join }}"
+certify_helmcharts_cert_logs_dir: "{{ [certify_helmcharts_working_dir, 'cert-logs'] | path_join }}"
+
+certify_helmcharts_chart_verifier_cmd: "chart-verifier" # assumes tool is in $PATH
+certify_helmcharts_kubeconfig: ''
+certify_helmcharts_write_to_file: ''
+certify_helmcharts_vendor_type: ''
+certify_helmcharts_profile_version: ''

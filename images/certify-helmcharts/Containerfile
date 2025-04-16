@@ -1,0 +1,47 @@
+ARG chart_verifier_version=1.13.10
+ARG chart_verifier_download_filename="chart-verifier-${chart_verifier_version}.tgz"
+ARG commit=unknown
+ARG release_tag=unknown
+# Get the tools we need
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS tool-fetcher
+ARG chart_verifier_version
+ARG chart_verifier_download_filename
+
+RUN \ 
+    # The chart-verifier download is a gzipped tarball, and we need extra tools to install it.
+    microdnf install -y tar gzip \
+    && curl -L "https://github.com/redhat-certification/chart-verifier/releases/download/${chart_verifier_version}/${chart_verifier_download_filename}" > "${chart_verifier_download_filename}" \
+    && tar xzvf "${chart_verifier_download_filename}" \
+    && chmod +x chart-verifier
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+ARG release_tag
+ARG chart_verifier_version
+ARG chart_verifier_download_filename
+
+LABEL name="certify-helmcharts" \
+      vendor="opdev" \
+      maintainer="App Engineering & Certification Tooling" \
+      version="1" \
+      summary="Uses Ansible Runner to run Helm chart certification tooling" \
+      description="Ansible Runner-based implemementation for running Helm chart certifiction against Red Hat Partner Product Listings" \
+      url="https://github.com/opdev/cert-tool-runners" \
+      release=${release_tag} \
+      vcs-ref=${commit} \
+      chart-verifier-version=${chart_verifier_version} \
+      build-arch=${arch}
+
+# Configure Python, Ansible, etc.
+RUN \
+    microdnf install -y python3 \
+    && python3 -m venv /ve \
+    && /ve/bin/pip install ansible-runner ansible-core \
+    && ln -sf /ve/bin/* /usr/local/bin/ \
+    && ansible-galaxy collection install community.general
+
+COPY ./runner /runner
+COPY --from=tool-fetcher chart-verifier /usr/local/bin/chart-verifier
+
+WORKDIR /runner
+
+ENTRYPOINT /usr/local/bin/ansible-runner run . --playbook playbook.yaml -vv

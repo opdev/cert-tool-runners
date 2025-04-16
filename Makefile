@@ -19,11 +19,11 @@ image.certify-containers:
 		--tag certify-containers \
 		images/certify-containers
 
-# .PHONY: image.certify-helmcharts
-# image.certify-helmcharts:
-# 	podman build \
-# 		--tag certify-helmcharts \
-# 		images/certify-helmcharts
+.PHONY: image.certify-helmcharts
+image.certify-helmcharts:
+	podman build \
+		--tag certify-helmcharts \
+		images/certify-helmcharts
 
 # .PHONY: image.certify-operators
 # image.certify-operators:

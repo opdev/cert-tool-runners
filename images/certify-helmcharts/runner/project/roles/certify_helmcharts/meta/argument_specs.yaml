@@ -1,0 +1,71 @@
+---
+argument_specs:
+  main:
+    short_description: Run certification tooling against Helm charts.
+    description:
+      - This is a purpose-made role for executing Helm chart certification
+      - tooling ("Chart Verifier")) against one or more Helm charts.
+    options:
+      certify_helmcharts_chart_uri:
+        description: The Helm chart reference to target
+        required: true
+        type: str
+      certify_helmcharts_working_dir:
+        description:
+          - This is the base working directory for the role.
+          - The role will create working directories, or assume
+          - the location of specific files based on this path.
+          - By default, this value is empty, which makes derived
+          - values calculated to be relative to the current working
+          - directory when called.
+        required: false
+        type: str
+      certify_helmcharts_userfiles_dir:
+        description:
+          - This directory is where user-provided files the role must
+          - use should exist. By default, this is calculated relative
+          - to the certify_helmcharts_working_dir.
+        required: false
+        type: str
+      certify_helmcharts_cert_logs_dir:
+        description:
+          - This directory is where the role will write log files for
+          - each individual tool run. By default, this is calculated
+          - relative to the certify_helmcharts_working_dir.
+        required: false
+        type: str
+      certify_helmcharts_chart_verifier_cmd:
+        description:
+          - This is the location of the Chart Verifier command to run. This file
+          - is expected to be executable, and will not be made so by the
+          - role.
+        required: false
+        type: str
+      certify_helmcharts_debug:
+        description:
+          - Enables debug logging
+        required: false
+        type: bool
+      certify_helmcharts_set_items:
+        description:
+          - "The values to pass to Chart Verifier's --set flag"
+        required: false
+        type: list
+        item: str
+      certify_helmcharts_vendor_type:
+        description:
+          - Which vendor type you wish to use.
+        required: false
+        type: str
+        choices:
+          - '' # allows a caller to leave this empty.
+          - partner
+          - redhat
+          - community
+      certify_helmcharts_profile_version:
+        description:
+          - Which version of the profile configured via certify_helmcharts_vendor_type, or
+          - the default vendor type if certify_helmcharts_vendor_type is not set. 
+        required: false
+        type: str
+...
