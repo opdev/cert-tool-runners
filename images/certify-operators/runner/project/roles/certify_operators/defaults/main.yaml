@@ -1,0 +1,7 @@
+---
+certify_operators_working_dir: ''
+certify_operators_userfiles_dir: "{{ [certify_operators_working_dir, 'userfiles'] | path_join }}"
+certify_operators_cert_logs_dir: "{{ [certify_operators_working_dir, 'cert-logs'] | path_join }}"
+certify_operators_preflight_cmd: "preflight" # i.e. the preflight command must be in PATH.
+certify_operators_preflight_loglevel: 'debug'
+certify_operators_no_log: true

@@ -1,0 +1,90 @@
+---
+argument_specs:
+  main:
+    short_description: Run certification tooling against Operator bundles.
+    description:
+      - This is a purpose-made role for executing Operator certification
+      - tooling ("OpenShift Preflight")) against one or more container images.
+    options:
+      certify_operators_target_image:
+        description: The Operator bundle image reference to target
+        required: true
+        type: str
+      certify_operators_working_dir:
+        description:
+          - This is the base working directory for the role.
+          - The role will create working directories, or assume
+          - the location of specific files based on this path.
+          - By default, this value is empty, which makes derived
+          - values calculated to be relative to the current working
+          - directory when called.
+        required: false
+        type: str
+      certify_operators_userfiles_dir:
+        description:
+          - This directory is where user-provided files the role must
+          - use should exist. By default, this is calculated relative
+          - to the certify_operators_working_dir.
+        required: false
+        type: str
+      certify_operators_cert_logs_dir:
+        description:
+          - This directory is where the role will write log files for
+          - each individual tool run. By default, this is calculated
+          - relative to the certify_operators_working_dir.
+        required: false
+        type: str
+      certify_operators_preflight_cmd:
+        description:
+          - This is the location of the Preflight command to run. This file
+          - is expected to be executable, and will not be made so by the
+          - role.
+        required: false
+        type: str
+      certify_operators_preflight_loglevel:
+        description:
+          - The preflight log verbosity setting.
+        required: false
+        type: str
+        choices:
+          - '' # Accept empty but defined values from the user.
+          - err
+          - warn
+          - info
+          - debug
+          - trace
+      certify_operators_kubeconfig:
+        description:
+          - The path to the kubeconfig file to use for cluster-based tests.
+        required: true
+        type: str
+      certify_operators_index_image:
+        description:
+          - The index image URI to use to confirm this Operator can
+          - be deployed via OLM. In Preflight terms, this is the PFLT_INDEX_IMAGE
+          - environment variable value.
+        required: true
+        type: str
+      certify_operators_scorecard_service_account:
+        description:
+          - Specify a service account to use instead of the tooling's default
+          - values.
+        required: false
+        type: str
+      certify_operators_scorecard_wait_time:
+        description:
+          - The duration to wait for OperatorSDK Scorecard to complete.
+        required: false
+        type: str
+      certify_operators_channel:
+        description:
+          - The channel in certify_operators_index_image from which the
+          - operator can be found.
+        required: false
+        type: str
+      certify_operators_scorecard_namespace:
+        description:
+          - The namespace to use for OperatorSDK Scorecard tests.
+        required: false
+        type: str
+...

@@ -1,0 +1,48 @@
+# TODO: Aside from labels and Entrypoint, this is expected to be nearly
+# identical to certify-containers. Investigate opportunities to optimize.
+ARG preflight_version=1.12.1
+ARG release_tag=unknown
+ARG commit=unknown
+ARG arch=amd64
+
+# Get the tools we need
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS tool-fetcher
+ARG preflight_version
+ARG arch
+
+RUN \
+    curl -L https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${preflight_version}/preflight-linux-${arch} > preflight-bin \
+    && chmod +x preflight-bin
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
+ARG release_tag
+ARG commit
+ARG preflight_version
+ARG arch
+
+LABEL name="certify-operators" \
+      vendor="opdev" \
+      maintainer="App Engineering & Certification Tooling" \
+      version="1" \
+      summary="Uses Ansible Runner to run Operator certification tooling" \
+      description="Ansible Runner-based implemementation for running Operator certifiction against Red Hat Partner Product Listings" \
+      url="https://github.com/opdev/cert-tool-runners" \
+      release=${release_tag} \
+      vcs-ref=${commit} \
+      preflight-version=${preflight_version} \
+      build-arch=${arch}
+
+# Configure Python, Ansible, etc.
+RUN \
+    microdnf install -y python3 \
+    && python3 -m venv /ve \
+    && /ve/bin/pip install ansible-runner ansible-core \
+    && ln -sf /ve/bin/* /usr/local/bin/ \
+    && ansible-galaxy collection install community.general
+
+COPY ./runner /runner
+COPY --from=tool-fetcher preflight-bin /usr/local/bin/preflight
+
+WORKDIR /runner
+
+ENTRYPOINT /usr/local/bin/ansible-runner run . --playbook playbook.yaml -vvv

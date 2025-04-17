@@ -1,0 +1,35 @@
+# This playbook is the primary entrypoint for the productctl-based multi-target
+# certification workflow.
+---
+- name: Certify operator
+  hosts: operator_components
+  # We don't really need discovered facts, given we're not using traditional
+  # "remote hosts"
+  gather_facts: false
+  environment:
+    # Respect proxy configuration throughout the playbook and role execution.
+    http_proxy: "{{ lookup('ansible.builtin.env', 'http_proxy') | default('') }}"
+    HTTP_PROXY: "{{ lookup('ansible.builtin.env', 'HTTP_PROXY') | default('') }}"
+    https_proxy: "{{ lookup('ansible.builtin.env', 'https_proxy') | default('') }}"
+    HTTPS_PROXY: "{{ lookup('ansible.builtin.env', 'HTTPS_PROXY') | default('') }}"
+  tasks:
+    - name: Execute Operator certification
+      ansible.builtin.include_role:
+        name: certify_operators
+      vars:
+        # Set the working directory to the expected base directory of
+        # ansible-runner in our image.
+        certify_operators_working_dir: "/runner"
+        # Each "host" should correspond with an image target to run certification
+        # against.
+        certify_operators_target_image: "{{ hostvars[inventory_hostname]['image'] }}"
+        certify_operators_index_image: "{{ hostvars[inventory_hostname]['index_image'] }}"
+        certify_operators_kubeconfig: "{{ hostvars[inventory_hostname]['tool_flags']['kubeconfig'] }}"
+        # Optional flags
+        certify_operators_preflight_loglevel: "{{ hostvars[inventory_hostname]['tool_flags']['loglevel'] | default(None) }}"
+        certify_operators_channel: "{{ hostvars[inventory_hostname]['tool_flags']['channel'] | default(None) }}"
+        certify_operators_scorecard_namespace: "{{ hostvars[inventory_hostname]['tool_flags']['scorecard_namespace'] | default(None) }}"
+        certify_operators_scorecard_image: "{{ hostvars[inventory_hostname]['tool_flags']['scorecard_image'] | default(None) }}"
+        certify_operators_scorecard_wait_time: "{{ hostvars[inventory_hostname]['tool_flags']['scorecard_wait_time'] | default(None) }}"
+        certify_operators_scorecard_service_account: "{{ hostvars[inventory_hostname]['tool_flags']['scorecard_service_account'] | default(None) }}"
+...

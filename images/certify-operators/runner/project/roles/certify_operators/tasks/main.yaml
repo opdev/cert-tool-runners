@@ -1,0 +1,57 @@
+---
+- name: Print preflight version
+  ansible.builtin.command:
+    argv:
+      - "{{ certify_operators_preflight_cmd }}"
+      - "--version"
+  register: vers_cmd
+  changed_when: vers_cmd.rc == 0
+  failed_when: vers_cmd.rc != 0
+
+- name: Populate environment with relevant inputs
+  ansible.builtin.set_fact:
+    tooling_env:
+      KUBECONFIG: "{{ certify_operators_kubeconfig }}"
+      PFLT_INDEXIMAGE: "{{ certify_operators_index_image }}"
+
+- name: Create log directory
+  ansible.builtin.file:
+    state: directory
+    path: "{{ [certify_operators_cert_logs_dir, inventory_hostname] | path_join }}\
+          -{{ lookup('community.general.random_string', upper=false, numbers=false, special=false, length=8) }}"
+    mode: "0755"
+  register: run_dir
+
+- name: Run certification tooling
+  ansible.builtin.command:
+    cmd: >
+      {{ certify_operators_preflight_cmd }} check operator
+      {%- if certify_operators_preflight_loglevel is defined and certify_operators_preflight_loglevel != '' %}
+      --loglevel {{ certify_operators_preflight_loglevel }}
+      {%- endif %}
+
+      {%- if certify_operators_scorecard_service_account is defined and certify_operators_scorecard_service_account != '' %}
+      --serviceaccount {{ certify_operators_scorecard_service_account }}
+      {%- endif %}
+
+      {%- if certify_operators_scorecard_wait_time is defined and certify_operators_scorecard_wait_time != '' %}
+      --scorecard-wait-time {{ certify_operators_scorecard_wait_time }}
+      {%- endif %}
+
+      {%- if certify_operators_scorecard_image is defined and certify_operators_scorecard_image != '' %}
+      --scorecard-image {{ certify_operators_scorecard_image }}
+      {%- endif %}
+
+      {%- if certify_operators_channel is defined and certify_operators_channel != '' %}
+      --channel {{ certify_operators_channel }}
+      {%- endif %}
+
+      {%- if certify_operators_scorecard_namespace is defined and certify_operators_scorecard_namespace != '' %}
+      --namespace {{ certify_operators_scorecard_namespace }}
+      {%- endif %}
+      {{ certify_operators_target_image }}
+    chdir: "{{ run_dir.path }}"
+  environment: "{{ tooling_env | default({}) }}"
+  register: cert_cmd
+  changed_when: cert_cmd.rc == 0
+  failed_when: cert_cmd.rc != 0
