@@ -79,3 +79,153 @@ jobs:
       registry: ${{ secrets.IMAGE_REGISTRY }}
       user: ${{ secrets.REGISTRY_USER }}
       password: ${{ secrets.REGISTRY_TOKEN }}
+
+  build-certify-helmcharts:
+    env:
+      IMAGE_NAME: certify-helmcharts
+    name: Build and and push main snapshots for certify-helmcharts
+    strategy: 
+      matrix:
+        architecture:
+        - amd64
+        - arm64
+        # - ppc64le,
+        # - s390x
+        platform: [linux]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    # - name: Fetch latest release version
+    #   uses: reloc8/action-latest-release-version@1.0.0
+    #   id: fetch-latest-release
+    
+    - name: Set Env Tags
+      ## Not using actual release tag for now, as no releases exist.
+      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
+      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
+    
+    - name: set short sha
+      run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+        
+    - name: Build Image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        archs: ${{ matrix.architecture }}
+        context: ./images/certify-helmcharts
+        build-args: |
+          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
+          arch=${{ matrix.architecture }}
+          commit=${{ github.sha }}
+        dockerfiles: |
+          ./images/certify-helmcharts/Containerfile
+
+    - name: Push Image
+      id: push-image
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        registry: ${{ secrets.IMAGE_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_TOKEN }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
+    
+    outputs:
+      imageName: ${{ env.IMAGE_NAME }}
+      imageVersion: ${{ env.SHA_SHORT }}
+
+  build-certify-helmcharts-multiarch:
+    needs: build-certify-helmcharts
+    uses: ./.github/workflows/build-multiarch.yml
+    with:
+      name: ${{ needs.build-certify-helmcharts.outputs.imageName }}
+      tag: ${{ needs.build-certify-helmcharts.outputs.imageVersion }}
+      sign: false # do not sign images built on main
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      user: ${{ secrets.REGISTRY_USER }}
+      password: ${{ secrets.REGISTRY_TOKEN }}
+
+  build-certify-operators:
+    env:
+      IMAGE_NAME: certify-operators
+    name: Build and and push main snapshots for certify-operators
+    strategy: 
+      matrix:
+        architecture:
+        - amd64
+        - arm64
+        # - ppc64le,
+        # - s390x
+        platform: [linux]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    # - name: Fetch latest release version
+    #   uses: reloc8/action-latest-release-version@1.0.0
+    #   id: fetch-latest-release
+    
+    - name: Set Env Tags
+      ## Not using actual release tag for now, as no releases exist.
+      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
+      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
+    
+    - name: set short sha
+      run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+        
+    - name: Build Image
+      id: build-image
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: ${{ secrets.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        archs: ${{ matrix.architecture }}
+        context: ./images/certify-operators
+        build-args: |
+          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
+          arch=${{ matrix.architecture }}
+          commit=${{ github.sha }}
+        dockerfiles: |
+          ./images/certify-operators/Containerfile
+
+    - name: Push Image
+      id: push-image
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ env.IMAGE_NAME }}
+        tags: ${{ env.SHA_SHORT }}-${{ matrix.platform }}-${{ matrix.architecture }}
+        registry: ${{ secrets.IMAGE_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USER }}
+        password: ${{ secrets.REGISTRY_TOKEN }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
+    
+    outputs:
+      imageName: ${{ env.IMAGE_NAME }}
+      imageVersion: ${{ env.SHA_SHORT }}
+
+  build-certify-operators-multiarch:
+    needs: build-certify-operators
+    uses: ./.github/workflows/build-multiarch.yml
+    with:
+      name: ${{ needs.build-certify-operators.outputs.imageName }}
+      tag: ${{ needs.build-certify-operators.outputs.imageVersion }}
+      sign: false # do not sign images built on main
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      user: ${{ secrets.REGISTRY_USER }}
+      password: ${{ secrets.REGISTRY_TOKEN }}
