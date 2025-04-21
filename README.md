@@ -25,3 +25,27 @@ generated Ansible Inventory.
 - See
   [argument_specs.yaml](./images/certify-containers/runner/project/roles/certify_containers/meta/argument_specs.yaml)
   for details on how the the Ansible role is used.
+
+### Image: Certify Helm Charts
+
+- Images are available at:
+  [https://quay.io/opdev/certify-helmcharts](https://quay.io/opdev/certify-helmcharts).
+
+- See [README.md](./images/certify-helmcharts/README.md) for details on how to
+  use this image.
+
+- See
+  [argument_specs.yaml](./images/certify-helmcharts/runner/project/roles/certify_helmcharts/meta/argument_specs.yaml)
+  for details on how the the Ansible role is used.
+
+### Image: Certify Operators
+
+- Images are available at:
+  [https://quay.io/opdev/certify-operators](https://quay.io/opdev/certify-operators).
+
+- See [README.md](./images/certify-operators/README.md) for details on how to
+  use this image.
+
+- See
+  [argument_specs.yaml](./images/certify-operators/runner/project/roles/certify_operators/meta/argument_specs.yaml)
+  for details on how the the Ansible role is used.
