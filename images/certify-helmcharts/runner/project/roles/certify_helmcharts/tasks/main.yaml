@@ -31,6 +31,17 @@
       {%- endfor %}
       {%- endif %}
 
+      {%- if
+            certify_helmcharts_values_files is defined and
+            certify_helmcharts_values_files is iterable and
+            certify_helmcharts_values_files is not mapping and
+            certify_helmcharts_values_files is not string
+      %}
+      {%- for _chart_values_file in certify_helmcharts_values_files %}
+      --chart-values {{ _chart_values_file }}
+      {%- endfor %}
+      {%- endif %}
+
       {%- if certify_helmcharts_kubeconfig is defined and certify_helmcharts_kubeconfig != '' %}
       --kubeconfig {{ certify_helmcharts_kubeconfig }}
       {%- endif %}
@@ -45,6 +56,10 @@
 
       {%- if certify_helmcharts_debug is defined and certify_helmcharts_debug != '' and certify_helmcharts_debug %}
       --debug
+      {%- endif %}
+
+      {%- if certify_helmcharts_web_catalog_only is defined and certify_helmcharts_web_catalog_only != '' and certify_helmcharts_web_catalog_only %}
+      --web-catalog-only
       {%- endif %}
       {{ certify_helmcharts_chart_uri }}
     chdir: "{{ run_dir.path }}"

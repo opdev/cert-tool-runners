@@ -24,8 +24,10 @@
         certify_helmcharts_debug: "{{ hostvars[inventory_hostname]['tool_flags']['debug'] | default(None) }}"
         certify_helmcharts_vendor_type: "{{ hostvars[inventory_hostname]['tool_flags']['vendor_type'] | default(None) }}"
         certify_helmcharts_profile_version: "{{ hostvars[inventory_hostname]['tool_flags']['profile_version'] | default(None) }}"
-        # The kubeconfig file is relative to the userfiles directory for this
-        # use case.
+        # kubeconfig is relative to the userfiles directory.
         certify_helmcharts_kubeconfig: "{{ (hostvars[inventory_hostname]['tool_flags']['kubeconfig'] != '') | ansible.builtin.ternary(([certify_helmcharts_userfiles_dir, hostvars[inventory_hostname]['tool_flags']['kubeconfig']] | path_join), '') }}"
         certify_helmcharts_with_set_items: "{{ hostvars[inventory_hostname]['tool_flags']['with_set_items'] | default([]) }}"
+        certify_helmcharts_web_catalog_only: "{{ hostvars[inventory_hostname]['tool_flags']['web_catalog_only'] | default(False) }}"
+        # values_files are relative to the userfiles directory.
+        certify_helmcharts_values_files: "{{ [certify_helmcharts_userfiles_dir] | product(hostvars[inventory_hostname]['tool_flags']['values_files'] | default([])) | map('ansible.builtin.path_join') | list }}"
 ...

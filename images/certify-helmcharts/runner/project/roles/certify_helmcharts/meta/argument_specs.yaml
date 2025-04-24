@@ -46,9 +46,21 @@ argument_specs:
           - Enables debug logging
         required: false
         type: bool
+      certify_helmcharts_web_catalog_only:
+        description:
+          - Enables webCatalogOnly testing, or chart verification for
+          - charts that will not be distributed via traditional means.
+        required: false
+        type: bool
       certify_helmcharts_set_items:
         description:
           - "The values to pass to Chart Verifier's --set flag"
+        required: false
+        type: list
+        item: str
+      certify_helmcharts_values_files:
+        description:
+          - "The values to pass to Chart Verifier's --chart-values, or -F flag"
         required: false
         type: list
         item: str
