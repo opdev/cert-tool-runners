@@ -35,6 +35,6 @@ Notably:
 podman run -it --rm 
   -v "${PWD}"/logs:/runner/cert-logs:Z \
   -v "${PWD}"/userfiles:/runner/userfiles:Z,ro \
-  certify-operators
+  certify-helmcharts
 ```
 

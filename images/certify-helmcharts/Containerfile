@@ -44,4 +44,4 @@ COPY --from=tool-fetcher chart-verifier /usr/local/bin/chart-verifier
 
 WORKDIR /runner
 
-ENTRYPOINT /usr/local/bin/ansible-runner run . --playbook playbook.yaml -vv
+ENTRYPOINT /usr/local/bin/ansible-runner run . --playbook playbook.yaml -vvv

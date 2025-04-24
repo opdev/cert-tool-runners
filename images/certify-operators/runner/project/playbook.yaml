@@ -24,7 +24,7 @@
         # against.
         certify_operators_target_image: "{{ hostvars[inventory_hostname]['image'] }}"
         certify_operators_index_image: "{{ hostvars[inventory_hostname]['index_image'] }}"
-        certify_operators_kubeconfig: "{{ hostvars[inventory_hostname]['tool_flags']['kubeconfig'] }}"
+        certify_operators_kubeconfig: "{{ (hostvars[inventory_hostname]['tool_flags']['kubeconfig'] != '') | ansible.builtin.ternary(([certify_operators_userfiles_dir, hostvars[inventory_hostname]['tool_flags']['kubeconfig']] | path_join), '') }}"
         # Optional flags
         certify_operators_preflight_loglevel: "{{ hostvars[inventory_hostname]['tool_flags']['loglevel'] | default(None) }}"
         certify_operators_channel: "{{ hostvars[inventory_hostname]['tool_flags']['channel'] | default(None) }}"

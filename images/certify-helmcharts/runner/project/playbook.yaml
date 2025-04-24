@@ -21,8 +21,11 @@
         # ansible-runner in our image.
         certify_helmcharts_working_dir: "/runner"
         certify_helmcharts_chart_uri: "{{ hostvars[inventory_hostname]['chart_uri'] }}"
+        certify_helmcharts_debug: "{{ hostvars[inventory_hostname]['tool_flags']['debug'] | default(None) }}"
         certify_helmcharts_vendor_type: "{{ hostvars[inventory_hostname]['tool_flags']['vendor_type'] | default(None) }}"
         certify_helmcharts_profile_version: "{{ hostvars[inventory_hostname]['tool_flags']['profile_version'] | default(None) }}"
-        certify_helmcharts_kubeconfig: "{{ hostvars[inventory_hostname]['kubeconfig'] }}"
+        # The kubeconfig file is relative to the userfiles directory for this
+        # use case.
+        certify_helmcharts_kubeconfig: "{{ (hostvars[inventory_hostname]['tool_flags']['kubeconfig'] != '') | ansible.builtin.ternary(([certify_helmcharts_userfiles_dir, hostvars[inventory_hostname]['tool_flags']['kubeconfig']] | path_join), '') }}"
         certify_helmcharts_with_set_items: "{{ hostvars[inventory_hostname]['tool_flags']['with_set_items'] | default([]) }}"
 ...
