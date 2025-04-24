@@ -12,7 +12,7 @@ RUN \
     microdnf install -y tar gzip \
     && curl -L "https://github.com/redhat-certification/chart-verifier/releases/download/${chart_verifier_version}/${chart_verifier_download_filename}" > "${chart_verifier_download_filename}" \
     && tar xzvf "${chart_verifier_download_filename}" \
-    && chmod +x chart-verifier
+    && chmod 755 chart-verifier
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 ARG release_tag

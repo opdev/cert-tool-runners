@@ -1,6 +1,7 @@
 # TODO: Aside from labels and Entrypoint, this is expected to be nearly
 # identical to certify-containers. Investigate opportunities to optimize.
 ARG preflight_version=1.12.1
+ARG operator_sdk_version=1.39.1
 ARG release_tag=unknown
 ARG commit=unknown
 ARG arch=amd64
@@ -8,11 +9,16 @@ ARG arch=amd64
 # Get the tools we need
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest AS tool-fetcher
 ARG preflight_version
+ARG operator_sdk_version
 ARG arch
 
 RUN \
-    curl -L https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${preflight_version}/preflight-linux-${arch} > preflight-bin \
-    && chmod +x preflight-bin
+    curl --fail -L https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${preflight_version}/preflight-linux-${arch} > preflight-bin \
+    && chmod 755 preflight-bin
+
+RUN \
+    curl --fail -L https://github.com/operator-framework/operator-sdk/releases/download/v${operator_sdk_version}/operator-sdk_linux_${arch} > operator-sdk-bin \
+    && chmod 755 operator-sdk-bin
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 ARG release_tag
@@ -42,6 +48,7 @@ RUN \
 
 COPY ./runner /runner
 COPY --from=tool-fetcher preflight-bin /usr/local/bin/preflight
+COPY --from=tool-fetcher operator-sdk-bin /usr/local/bin/operator-sdk
 
 WORKDIR /runner
 

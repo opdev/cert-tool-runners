@@ -11,8 +11,8 @@ build_dir:
 clean:
 	rm --recursive --verbose $(BUILD_DIR)
 
-# .PHONY: images
-# images: image.certify-operators image.certify-containers image.certify-helmcharts
+.PHONY: images
+images: image.certify-operators image.certify-containers image.certify-helmcharts
 
 .PHONY: image.certify-containers
 image.certify-containers:

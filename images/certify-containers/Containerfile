@@ -10,7 +10,7 @@ ARG arch
 
 RUN \
     curl -L https://github.com/redhat-openshift-ecosystem/openshift-preflight/releases/download/${preflight_version}/preflight-linux-${arch} > preflight-bin \
-    && chmod +x preflight-bin
+    && chmod 755 preflight-bin
 
 
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
