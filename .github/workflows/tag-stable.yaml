@@ -1,0 +1,26 @@
+name: Move stable tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-tag:
+        required: true
+        description: The existing reference to which we will add the stable tag.
+
+jobs:
+  tag-stable:
+    strategy: 
+      matrix:
+        image:
+          - certify-containers
+          - certify-operators
+          - certify-helmcharts
+    uses: ./.github/workflows/tag-image.yaml
+    with:
+      image-name: ${{ matrix.image }}
+      target-tag: ${{ inputs.target-tag }}
+      with-tag: stable
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      registry-username: ${{ secrets.REGISTRY_USER }}
+      registry-credential: ${{ secrets.REGISTRY_TOKEN }}
