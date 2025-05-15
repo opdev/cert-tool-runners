@@ -8,35 +8,31 @@ on:
       - published
 
 jobs:
+  populate-release-data:
+    outputs:
+      release-tag: ${{ steps.populate-release-data.outputs.release-tag }}
+      sha-short: ${{ steps.populate-release-data.outputs.sha-short }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Populate release data
+      id: populate-release-data
+      run: |
+        echo release-tag=$(echo ${{ github.ref }} | cut -d '/' -f 3) | tee -a $GITHUB_OUTPUT
+        echo sha-short=$(expr substr "${{ github.sha }}" 1 7) | tee -a $GITHUB_OUTPUT
   push-release-tag:
+    needs: [populate-release-data]
     strategy: 
       matrix:
         image:
           - certify-containers
           - certify-operators
           - certify-helmcharts
-    runs-on: ubuntu-latest
-    steps:
-      # Pull the main branch instead of the release ref
-      # so that we can be sure we're using the workflow
-      # from main.
-    - uses: actions/checkout@v4
-      with:
-        ref: main
-      # Pull information from the GHA contexts instead of the checked-out repo
-      # because the checked-out repo is always main, and is not related to this
-      # event.
-    - name: Populate release data
-      id: populate-release-data
-      run: |
-        echo release-tag=$(echo ${{ github.ref }} | cut -d '/' -f 3) | tee -a $GITHUB_OUTPUT
-        echo sha-short=$(expr substr "${{ github.sha }}" 1 7) | tee -a $GITHUB_OUTPUT
-    - name: Tag image with release tag
-      uses: ./.github/workflows/tag-image.yaml@main
-      with:
-        image-name: ${{ matrix.image }}
-        target-tag: ${{ steps.populate-release-data.outputs.sha-short }}
-        with-tag: ${{ steps.populate-release-data.outputs.release-tag }}
-        registry: ${{ secrets.IMAGE_REGISTRY }}
-        registry-username: ${{ secrets.REGISTRY_USER }}
-        registry-password: ${{ secrets.REGISTRY_TOKEN }}
+    uses: ./.github/workflows/tag-image.yaml
+    with:
+      image-name: ${{ matrix.image }}
+      target-tag: ${{ needs.populate-release-data.outputs.sha-short }}
+      with-tag: ${{ needs.populate-release-data.outputs.release-tag }}
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      registry-username: ${{ secrets.REGISTRY_USER }}
+      registry-credential: ${{ secrets.REGISTRY_TOKEN }}

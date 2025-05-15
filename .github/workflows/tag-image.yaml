@@ -10,10 +10,6 @@ on:
         required: true
         type: string
         description: The name of the image. E.g. "my-image".
-      registry:
-        required: true
-        type: string
-        description: The registry endpoint where the image resides, including the namespace.
       target-tag:
         required: true
         type: string
@@ -23,6 +19,9 @@ on:
         type: string
         description: The new tag to add to the previous tag.
     secrets:
+      registry:
+        required: true
+        description: The registry endpoint where the image resides, including the namespace.
       registry-username:
         required: true
         description: The username used to authenticate to the registry
@@ -32,25 +31,27 @@ on:
   
 jobs:
   tag-image:
-    outputs:
-      applied-tag: ${{ steps.apply-tag.outputs.applied-tag }}
     runs-on: ubuntu-latest
     steps:
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: 1.23
+    - name: Install Skopeo
+      run: |
+        sudo apt-get update && sudo apt install libgpgme-dev libassuan-dev libbtrfs-dev pkg-config -y
+        go install github.com/containers/skopeo/cmd/skopeo@v1.18.0
+        skopeo -v
     - name: Authenticate to registry
       uses: redhat-actions/podman-login@v1
       with:
-        registry: ${{ inputs.registry }}
+        registry: ${{ secrets.registry }}
         username: ${{ secrets.registry-username }}
         password: ${{ secrets.registry-credential }}
-    - name: Pull original image reference
-      run: podman pull ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.target-tag }}
-    - name: Apply new tag
+    - name: Tag image
       run: |
-        podman tag \
-          ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.target-tag }} \
-          ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}
-    - name: Push applied tag
-      id: apply-tag
-      run: | 
-        podman push ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}
-        echo 'applied-tag=${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}' | tee -a $GITHUB_OUTPUT
+        skopeo copy \
+          --preserve-digests \
+          --multi-arch index-only \
+          docker://${{ secrets.registry }}/${{ inputs.image-name }}:${{ inputs.target-tag }} \
+          docker://${{ secrets.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}
