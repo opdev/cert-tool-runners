@@ -5,7 +5,7 @@ on:
     branches: [ main, ghactions ]
   
 jobs:
-  build-main-certify-containers:
+  build-certify-containers:
     env:
       IMAGE_NAME: certify-containers
     name: Build and and push main snapshots for certify-containers
@@ -55,20 +55,34 @@ jobs:
       run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
     
     outputs:
-      imageName: ${{ env.IMAGE_NAME }}
-      imageVersion: ${{ env.SHA_SHORT }}
+      image-name: ${{ env.IMAGE_NAME }}
+      image-version: ${{ env.SHA_SHORT }}
 
   build-multiarch-certify-containers:
-    needs: build-main-certify-containers
+    needs: build-certify-containers
     uses: ./.github/workflows/build-multiarch.yaml
     with:
-      name: ${{ needs.build-main-certify-containers.outputs.imageName }}
-      tag: ${{ needs.build-main-certify-containers.outputs.imageVersion }}
+      name: ${{ needs.build-certify-containers.outputs.image-name }}
+      tag: ${{ needs.build-certify-containers.outputs.image-version }}
       sign: false # do not sign images built on main
     secrets:
       registry: ${{ secrets.IMAGE_REGISTRY }}
       user: ${{ secrets.REGISTRY_USER }}
       password: ${{ secrets.REGISTRY_TOKEN }}
+
+  tag-latest-certify-containers:
+    needs: 
+    - build-multiarch-certify-containers
+    - build-certify-containers
+    uses: ./.github/workflows/tag-image.yaml
+    with:
+      image-name: ${{ needs.build-certify-containers.outputs.image-name }}
+      target-tag: ${{ needs.build-certify-containers.outputs.image-version }}
+      with-tag: latest
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      registry-username: ${{ secrets.REGISTRY_USER }}
+      registry-credential: ${{ secrets.REGISTRY_TOKEN }}
 
   build-certify-helmcharts:
     env:
@@ -120,20 +134,34 @@ jobs:
       run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
     
     outputs:
-      imageName: ${{ env.IMAGE_NAME }}
-      imageVersion: ${{ env.SHA_SHORT }}
+      image-name: ${{ env.IMAGE_NAME }}
+      image-version: ${{ env.SHA_SHORT }}
 
-  build-certify-helmcharts-multiarch:
+  build-multiarch-certify-helmcharts:
     needs: build-certify-helmcharts
     uses: ./.github/workflows/build-multiarch.yaml
     with:
-      name: ${{ needs.build-certify-helmcharts.outputs.imageName }}
-      tag: ${{ needs.build-certify-helmcharts.outputs.imageVersion }}
+      name: ${{ needs.build-certify-helmcharts.outputs.image-name }}
+      tag: ${{ needs.build-certify-helmcharts.outputs.image-version }}
       sign: false # do not sign images built on main
     secrets:
       registry: ${{ secrets.IMAGE_REGISTRY }}
       user: ${{ secrets.REGISTRY_USER }}
       password: ${{ secrets.REGISTRY_TOKEN }}
+
+  tag-latest-certify-helmcharts:
+    needs: 
+    - build-multiarch-certify-helmcharts
+    - build-certify-helmcharts
+    uses: ./.github/workflows/tag-image.yaml
+    with:
+      image-name: ${{ needs.build-certify-helmcharts.outputs.image-name }}
+      target-tag: ${{ needs.build-certify-helmcharts.outputs.image-version }}
+      with-tag: latest
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      registry-username: ${{ secrets.REGISTRY_USER }}
+      registry-credential: ${{ secrets.REGISTRY_TOKEN }}
 
   build-certify-operators:
     env:
@@ -185,17 +213,31 @@ jobs:
       run: echo "Image pushed to ${{ steps.push-image.outputs.registry-paths }}"
     
     outputs:
-      imageName: ${{ env.IMAGE_NAME }}
-      imageVersion: ${{ env.SHA_SHORT }}
+      image-name: ${{ env.IMAGE_NAME }}
+      image-version: ${{ env.SHA_SHORT }}
 
-  build-certify-operators-multiarch:
+  build-multiarch-certify-operators:
     needs: build-certify-operators
     uses: ./.github/workflows/build-multiarch.yaml
     with:
-      name: ${{ needs.build-certify-operators.outputs.imageName }}
-      tag: ${{ needs.build-certify-operators.outputs.imageVersion }}
+      name: ${{ needs.build-certify-operators.outputs.image-name }}
+      tag: ${{ needs.build-certify-operators.outputs.image-version }}
       sign: false # do not sign images built on main
     secrets:
       registry: ${{ secrets.IMAGE_REGISTRY }}
       user: ${{ secrets.REGISTRY_USER }}
       password: ${{ secrets.REGISTRY_TOKEN }}
+
+  tag-latest-certify-operatorsd:
+    needs: 
+    - build-multiarch-certify-operators
+    - build-certify-operators
+    uses: ./.github/workflows/tag-image.yaml
+    with:
+      image-name: ${{ needs.build-certify-operators.outputs.image-name }}
+      target-tag: ${{ needs.build-certify-operators.outputs.image-version }}
+      with-tag: latest
+    secrets:
+      registry: ${{ secrets.IMAGE_REGISTRY }}
+      registry-username: ${{ secrets.REGISTRY_USER }}
+      registry-credential: ${{ secrets.REGISTRY_TOKEN }}
