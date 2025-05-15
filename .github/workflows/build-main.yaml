@@ -20,16 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
-    # - name: Fetch latest release version
-    #   uses: reloc8/action-latest-release-version@1.0.0
-    #   id: fetch-latest-release
-    
-    - name: Set Env Tags
-      ## Not using actual release tag for now, as no releases exist.
-      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
-      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
-    
+  
     - name: set short sha
       run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
@@ -45,7 +36,6 @@ jobs:
         archs: ${{ matrix.architecture }}
         context: ./images/certify-containers
         build-args: |
-          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
           arch=${{ matrix.architecture }}
           commit=${{ github.sha }}
         dockerfiles: |
@@ -70,7 +60,7 @@ jobs:
 
   build-multiarch-certify-containers:
     needs: build-main-certify-containers
-    uses: ./.github/workflows/build-multiarch.yml
+    uses: ./.github/workflows/build-multiarch.yaml
     with:
       name: ${{ needs.build-main-certify-containers.outputs.imageName }}
       tag: ${{ needs.build-main-certify-containers.outputs.imageVersion }}
@@ -96,15 +86,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    # - name: Fetch latest release version
-    #   uses: reloc8/action-latest-release-version@1.0.0
-    #   id: fetch-latest-release
-    
-    - name: Set Env Tags
-      ## Not using actual release tag for now, as no releases exist.
-      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
-      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
-    
     - name: set short sha
       run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
@@ -120,7 +101,6 @@ jobs:
         archs: ${{ matrix.architecture }}
         context: ./images/certify-helmcharts
         build-args: |
-          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
           arch=${{ matrix.architecture }}
           commit=${{ github.sha }}
         dockerfiles: |
@@ -145,7 +125,7 @@ jobs:
 
   build-certify-helmcharts-multiarch:
     needs: build-certify-helmcharts
-    uses: ./.github/workflows/build-multiarch.yml
+    uses: ./.github/workflows/build-multiarch.yaml
     with:
       name: ${{ needs.build-certify-helmcharts.outputs.imageName }}
       tag: ${{ needs.build-certify-helmcharts.outputs.imageVersion }}
@@ -171,15 +151,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    # - name: Fetch latest release version
-    #   uses: reloc8/action-latest-release-version@1.0.0
-    #   id: fetch-latest-release
-    
-    - name: Set Env Tags
-      ## Not using actual release tag for now, as no releases exist.
-      # run: echo RELEASE_TAG=${{ steps.fetch-latest-release.outputs.latest-release }} >> $GITHUB_ENV
-      run: echo "RELEASE_TAG=0.0.0" >> $GITHUB_ENV
-    
     - name: set short sha
       run: echo SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
 
@@ -195,7 +166,6 @@ jobs:
         archs: ${{ matrix.architecture }}
         context: ./images/certify-operators
         build-args: |
-          release_tag=${{ env.RELEASE_TAG }}+${{ github.sha }}
           arch=${{ matrix.architecture }}
           commit=${{ github.sha }}
         dockerfiles: |
@@ -220,7 +190,7 @@ jobs:
 
   build-certify-operators-multiarch:
     needs: build-certify-operators
-    uses: ./.github/workflows/build-multiarch.yml
+    uses: ./.github/workflows/build-multiarch.yaml
     with:
       name: ${{ needs.build-certify-operators.outputs.imageName }}
       tag: ${{ needs.build-certify-operators.outputs.imageVersion }}

@@ -1,0 +1,42 @@
+# Workflow "Release" responds to published releases and tags creates or moves tags
+# associated with the release ref.
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  push-release-tag:
+    strategy: 
+      matrix:
+        image:
+          - certify-containers
+          - certify-operators
+          - certify-helmcharts
+    runs-on: ubuntu-latest
+    steps:
+      # Pull the main branch instead of the release ref
+      # so that we can be sure we're using the workflow
+      # from main.
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+      # Pull information from the GHA contexts instead of the checked-out repo
+      # because the checked-out repo is always main, and is not related to this
+      # event.
+    - name: Populate release data
+      id: populate-release-data
+      run: |
+        echo release-tag=$(echo ${{ github.ref }} | cut -d '/' -f 3) | tee -a $GITHUB_OUTPUT
+        echo sha-short=$(expr substr "${{ github.sha }}" 1 7) | tee -a $GITHUB_OUTPUT
+    - name: Tag image with release tag
+      uses: ./.github/workflows/tag-image.yaml@main
+      with:
+        image-name: ${{ matrix.image }}
+        target-tag: ${{ steps.populate-release-data.outputs.sha-short }}
+        with-tag: ${{ steps.populate-release-data.outputs.release-tag }}
+        registry: ${{ secrets.IMAGE_REGISTRY }}
+        registry-username: ${{ secrets.REGISTRY_USER }}
+        registry-password: ${{ secrets.REGISTRY_TOKEN }}

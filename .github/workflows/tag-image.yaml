@@ -1,0 +1,56 @@
+# Workflow "Tag Image" tags the input image with a new tag, and pushes that tag
+# to the specified registry. The driving use case is moving floating tags, such
+# as the "latest" tag.
+name: Tag Image
+
+on:
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+        description: The name of the image. E.g. "my-image".
+      registry:
+        required: true
+        type: string
+        description: The registry endpoint where the image resides, including the namespace.
+      target-tag:
+        required: true
+        type: string
+        description: What pre-existing tag will receive the new tag.
+      with-tag:
+        required: true
+        type: string
+        description: The new tag to add to the previous tag.
+    secrets:
+      registry-username:
+        required: true
+        description: The username used to authenticate to the registry
+      registry-credential:
+        required: true
+        description: the authentication credential used to authenticate to the registry
+  
+jobs:
+  tag-image:
+    outputs:
+      applied-tag: ${{ steps.apply-tag.outputs.applied-tag }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Authenticate to registry
+      uses: redhat-actions/podman-login@v1
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ secrets.registry-username }}
+        password: ${{ secrets.registry-credential }}
+    - name: Pull original image reference
+      run: podman pull ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.target-tag }}
+    - name: Apply new tag
+      run: |
+        podman tag \
+          ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.target-tag }} \
+          ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}
+    - name: Push applied tag
+      id: apply-tag
+      run: | 
+        podman push ${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}
+        echo 'applied-tag=${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.with-tag }}' | tee -a $GITHUB_OUTPUT
